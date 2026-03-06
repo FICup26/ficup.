@@ -2970,45 +2970,39 @@ window.uploadSocialVideo = async (file) => {
         const loader = document.getElementById('upload-loading');
         if(loader) loader.classList.remove('hidden');
 
-        // --- NUOVO SISTEMA GRATUITO (PixelDrain) ---
+        // --- NUOVO SISTEMA: FILE.IO (Più compatibile con GitHub) ---
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('anonymous', 'true');
 
         try {
-            // Carichiamo il video sul server gratuito
-            const response = await fetch('https://pixeldrain.com/api/file', {
+            const response = await fetch('https://file.io', {
                 method: 'POST',
                 body: formData
             });
             const data = await response.json();
 
             if (data.success) {
-                // Questo è il link del video appena caricato
-                const url = `https://pixeldrain.com/api/file/${data.id}`;
-
-                // Salviamo il link su Firestore (che è GRATIS)
+                // Salviamo il link su Firebase
                 await addDoc(collection(db, 'artifacts', 'ficup-lite-v2', 'public', 'data', 'social_clips'), {
-                    videoUrl: url,
+                    videoUrl: data.link, // Link fornito da file.io
                     senderName: userNick,
                     timestamp: serverTimestamp(),
                     reports: 0
                 });
 
-                // Messaggio automatico in chat
                 await addDoc(collection(db, 'artifacts', 'ficup-lite-v2', 'public', 'data', 'messages'), {
-                    text: `🎬 Nuova Clip caricata da ${userNick}!`,
+                    text: `🎬 Nuova Clip di ${userNick}!`,
                     senderName: "SISTEMA",
                     timestamp: serverTimestamp()
                 });
 
-                alert("✅ Video pubblicato!");
+                alert("✅ Video pubblicato con successo!");
             } else {
-                alert("Errore nel caricamento sul server.");
+                alert("Il server è momentaneamente occupato. Riprova.");
             }
         } catch (error) {
             console.error(error);
-            alert("Errore durante l'upload.");
+            alert("Errore di connessione. Assicurati di essere su HTTPS.");
         } finally {
             if(loader) loader.classList.add('hidden');
         }
